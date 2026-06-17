@@ -1,8 +1,10 @@
-const path = require("path");
+require("dotenv").config();
+
 const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
 const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const app = express();
 
@@ -14,15 +16,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-const DB = "database.json";
+const DB_FILE = "database.json";
+const MONGO_URI = process.env.MONGO_URI;
 
-function readDB() {
-  return JSON.parse(fs.readFileSync(DB, "utf8"));
-}
-
-function writeDB(data) {
-  fs.writeFileSync(DB, JSON.stringify(data, null, 2));
-}
+let dbCache = null;
+let portalCollection = null;
 
 function ensureArrays(db) {
   db.users = db.users || [];
@@ -31,6 +29,68 @@ function ensureArrays(db) {
   db.studentSeries = db.studentSeries || [];
   db.exams = db.exams || [];
   db.results = db.results || [];
+}
+
+async function connectMongo() {
+  if (!MONGO_URI) {
+    console.log("MONGO_URI not found. Using database.json");
+    dbCache = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+    ensureArrays(dbCache);
+    return;
+  }
+
+  const client = new MongoClient(MONGO_URI);
+  await client.connect();
+
+  const mongoDb = client.db("examPortal");
+  portalCollection = mongoDb.collection("portalData");
+
+  let data = await portalCollection.findOne({ _id: "main" });
+
+  if (!data) {
+    const localData = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+    ensureArrays(localData);
+
+    data = {
+      _id: "main",
+      ...localData
+    };
+
+    await portalCollection.replaceOne(
+      { _id: "main" },
+      data,
+      { upsert: true }
+    );
+  }
+
+  dbCache = data;
+  ensureArrays(dbCache);
+
+  console.log("MongoDB connected successfully");
+}
+
+function readDB() {
+  const { _id, ...data } = dbCache;
+  return JSON.parse(JSON.stringify(data));
+}
+
+function writeDB(data) {
+  ensureArrays(data);
+
+  dbCache = {
+    _id: "main",
+    ...data
+  };
+
+  if (portalCollection) {
+    portalCollection.replaceOne(
+      { _id: "main" },
+      dbCache,
+      { upsert: true }
+    ).catch(err => console.log("MongoDB Save Error:", err));
+  } else {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  }
 }
 
 function isPublishedExam(exam) {
@@ -531,6 +591,7 @@ app.post("/admin/add-exam", (req, res) => {
     exam: newExam
   });
 });
+
 app.get("/admin/exam/:id", (req, res) => {
   const db = readDB();
   ensureArrays(db);
@@ -583,6 +644,10 @@ app.delete("/admin/delete-exam/:id", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+connectMongo().then(() => {
+  app.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
+  });
+}).catch(err => {
+  console.log("MongoDB connection failed:", err);
 });
