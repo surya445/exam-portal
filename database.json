@@ -1,0 +1,432 @@
+{
+  "users": [
+    {
+      "id": "Suryapraksh",
+      "password": "Surya@123",
+      "name": "Surya Sharma",
+      "role": "admin",
+      "course": ""
+    },
+    {
+      "id": "rahul",
+      "password": "1111",
+      "name": "Rahul Kumar",
+      "role": "student",
+      "course": "Exam"
+    },
+    {
+      "id": "vasu",
+      "password": "1234",
+      "name": "Varsha Sharma",
+      "role": "student",
+      "course": ""
+    }
+  ],
+  "examSeries": [
+    {
+      "id": 1781691293207,
+      "name": "UPSC",
+      "description": "For all subject of Upsc"
+    }
+  ],
+  "subjects": [
+    {
+      "id": 1781691304978,
+      "seriesId": 1781691293207,
+      "name": "Math"
+    }
+  ],
+  "studentSeries": [
+    {
+      "studentId": "rahul",
+      "seriesId": 1781691293207,
+      "joinedAt": "17/6/2026, 4:02:46 pm"
+    },
+    {
+      "studentId": "vasu",
+      "seriesId": 1781691293207,
+      "joinedAt": "17/6/2026, 6:20:23 pm"
+    }
+  ],
+  "exams": [
+    {
+      "id": 1781692348590,
+      "seriesId": 1781691293207,
+      "subjectId": 1781691304978,
+      "title": "Percentage 1",
+      "time": 900,
+      "marksPerQuestion": 3,
+      "negativeMarks": 1,
+      "instructions": "Exam Description\n\nWelcome to the examination. Please read the instructions carefully before starting the test.\n\nMarking Scheme\nEach correct answer carries +3 marks.\nEach incorrect answer carries -1 mark (negative marking).\nUnattempted questions carry 0 marks.\nCandidates are advised to answer only those questions for which they are reasonably confident.\nExam Guidelines\nRead every question carefully before selecting an answer.\nOnly one option is correct unless otherwise specified.\nOnce the exam timer expires, the test will be submitted automatically.\nEnsure a stable internet connection throughout the examination.\nDo not refresh, close, or navigate away from the exam window during the test.\nAny form of unfair means or malpractice may lead to disqualification.\nThe final score will be calculated based on the prescribed marking scheme.\nImportant Note\n\nAccuracy is as important as speed. Since negative marking is applicable, avoid random guessing and attempt questions wisely.\n\nBest of Luck for Your Exam! 🍀📚",
+      "submitWarning": "You want to submit exam.",
+      "questions": [
+        {
+          "question": "  25% of 400 = ?  ",
+          "options": [
+            "100",
+            "123",
+            "101",
+            "99"
+          ],
+          "answer": 0
+        },
+        {
+          "question": "  75% of 240 = ?  ",
+          "options": [
+            "181",
+            "180",
+            "198",
+            "189"
+          ],
+          "answer": 1
+        },
+        {
+          "question": "  A shirt costs ₹800. Find 25% of its price.  ",
+          "options": [
+            "300",
+            "200",
+            "100",
+            "150"
+          ],
+          "answer": 1
+        },
+        {
+          "question": "  A student scored 50% marks out of 700. How many marks did he get?  ",
+          "options": [
+            "150",
+            "250",
+            "450",
+            "350"
+          ],
+          "answer": 3
+        },
+        {
+          "question": "  50% of 96  ",
+          "options": [
+            "48",
+            "49",
+            "47",
+            "45"
+          ],
+          "answer": 0
+        },
+        {
+          "question": "75% of 360 = ? ",
+          "options": [
+            "250",
+            "269",
+            "270",
+            "280"
+          ],
+          "answer": 2
+        },
+        {
+          "question": "  25% of 84   ",
+          "options": [
+            "43",
+            "41",
+            "42",
+            "45"
+          ],
+          "answer": 2
+        },
+        {
+          "question": "  75% of 84   ",
+          "options": [
+            "62",
+            "63",
+            "61",
+            "64"
+          ],
+          "answer": 1
+        },
+        {
+          "question": "  40% of 400",
+          "options": [
+            "178",
+            "187",
+            "169",
+            "160"
+          ],
+          "answer": 3
+        },
+        {
+          "question": "  25% of 85   ",
+          "options": [
+            "41.5",
+            "41.25",
+            "42.5",
+            "42.25"
+          ],
+          "answer": 0
+        }
+      ],
+      "publishAt": "2026-06-17T21:10"
+    }
+  ],
+  "results": [
+    {
+      "studentId": "rahul",
+      "studentName": "Rahul Kumar",
+      "examId": 1781692348590,
+      "examTitle": "Percentage 1",
+      "score": 1,
+      "totalMarks": 30,
+      "percentage": "3.33",
+      "correctCount": 1,
+      "wrongCount": 2,
+      "notAttempted": 7,
+      "marksPerQuestion": 3,
+      "negativeMarks": 1,
+      "date": "17/6/2026, 4:03:14 pm",
+      "review": [
+        {
+          "question": "  25% of 400 = ?  ",
+          "yourAnswer": "100",
+          "correctAnswer": "100",
+          "status": "Correct",
+          "marks": 3
+        },
+        {
+          "question": "  75% of 240 = ?  ",
+          "yourAnswer": "198",
+          "correctAnswer": "180",
+          "status": "Wrong",
+          "marks": -1
+        },
+        {
+          "question": "  A shirt costs ₹800. Find 25% of its price.  ",
+          "yourAnswer": "150",
+          "correctAnswer": "200",
+          "status": "Wrong",
+          "marks": -1
+        },
+        {
+          "question": "  A student scored 50% marks out of 700. How many marks did he get?  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "350",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  50% of 96  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "48",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "75% of 360 = ? ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "270",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  25% of 84   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "42",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  75% of 84   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "63",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  40% of 400",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "160",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  25% of 85   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "41.5",
+          "status": "Not Attempted",
+          "marks": 0
+        }
+      ]
+    },
+    {
+      "studentId": "rahul",
+      "studentName": "Rahul Kumar",
+      "examId": 1781692348590,
+      "examTitle": "Percentage 1",
+      "attemptNo": 2,
+      "score": 0,
+      "totalMarks": 30,
+      "percentage": "0.00",
+      "correctCount": 0,
+      "wrongCount": 0,
+      "notAttempted": 10,
+      "marksPerQuestion": 3,
+      "negativeMarks": 1,
+      "date": "17/6/2026, 5:12:14 pm",
+      "review": [
+        {
+          "question": "  25% of 400 = ?  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "100",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  75% of 240 = ?  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "180",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  A shirt costs ₹800. Find 25% of its price.  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "200",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  A student scored 50% marks out of 700. How many marks did he get?  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "350",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  50% of 96  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "48",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "75% of 360 = ? ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "270",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  25% of 84   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "42",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  75% of 84   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "63",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  40% of 400",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "160",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  25% of 85   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "41.5",
+          "status": "Not Attempted",
+          "marks": 0
+        }
+      ]
+    },
+    {
+      "studentId": "rahul",
+      "studentName": "Rahul Kumar",
+      "examId": 1781692348590,
+      "examTitle": "Percentage 1",
+      "attemptNo": 3,
+      "score": -2,
+      "totalMarks": 30,
+      "percentage": "-6.67",
+      "correctCount": 0,
+      "wrongCount": 2,
+      "notAttempted": 8,
+      "marksPerQuestion": 3,
+      "negativeMarks": 1,
+      "date": "17/6/2026, 6:18:28 pm",
+      "review": [
+        {
+          "question": "  25% of 400 = ?  ",
+          "yourAnswer": "99",
+          "correctAnswer": "100",
+          "status": "Wrong",
+          "marks": -1
+        },
+        {
+          "question": "  75% of 240 = ?  ",
+          "yourAnswer": "198",
+          "correctAnswer": "180",
+          "status": "Wrong",
+          "marks": -1
+        },
+        {
+          "question": "  A shirt costs ₹800. Find 25% of its price.  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "200",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  A student scored 50% marks out of 700. How many marks did he get?  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "350",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  50% of 96  ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "48",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "75% of 360 = ? ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "270",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  25% of 84   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "42",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  75% of 84   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "63",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  40% of 400",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "160",
+          "status": "Not Attempted",
+          "marks": 0
+        },
+        {
+          "question": "  25% of 85   ",
+          "yourAnswer": "Not Attempted",
+          "correctAnswer": "41.5",
+          "status": "Not Attempted",
+          "marks": 0
+        }
+      ]
+    }
+  ]
+}
