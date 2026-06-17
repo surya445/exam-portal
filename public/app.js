@@ -908,7 +908,8 @@ async function publishExam() {
   const subjectId = document.getElementById("examSubject").value;
   const title = document.getElementById("examTitle").value;
   const time = document.getElementById("examTime").value;
-  const publishAt = document.getElementById("publishAt").value;
+  const publishAtInput = document.getElementById("publishAt").value;
+  const publishAt = publishAtInput ? new Date(publishAtInput).toISOString() : "";
   const marksPerQuestion = document.getElementById("marksPerQuestion").value || 1;
   const negativeMarks = document.getElementById("negativeMarks").value || 0;
   const instructions = document.getElementById("instructions").value;
@@ -1446,7 +1447,9 @@ async function updateExam(id) {
     subjectId: Number(document.getElementById("editSubject").value),
     title: document.getElementById("editTitle").value,
     time: Number(document.getElementById("editTime").value),
-    publishAt: document.getElementById("editPublishAt").value,
+    publishAt: document.getElementById("editPublishAt").value
+  ? new Date(document.getElementById("editPublishAt").value).toISOString()
+  : "",
     marksPerQuestion: Number(document.getElementById("editMarks").value || 1),
     negativeMarks: Number(document.getElementById("editNegative").value || 0),
     instructions: document.getElementById("editInstructions").value,
