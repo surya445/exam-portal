@@ -421,9 +421,7 @@ function startExam() {
   currentQuestionIndex = 0;
     examTimeLeft = currentExam.time;
 
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen();
-  }
+ 
 
   renderExamScreen();
 }
@@ -574,9 +572,7 @@ function confirmSubmit() {
 async function submitExam(autoSubmitted) {
   clearInterval(timer);
 
-  if (document.fullscreenElement) {
-    document.exitFullscreen();
-  }
+  
 
   const res = await fetch("/submit", {
     method: "POST",
