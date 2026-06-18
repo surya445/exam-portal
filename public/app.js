@@ -1085,7 +1085,7 @@ async function adminViewStudentSubjectResults(studentId, studentName, subjectId,
 
   document.getElementById("subjectExamArea").innerHTML = `
     <div class="section premium-section">
-      <h2>${subjectName} - Exam Reports</h2>
+      <h2>${studentName} - ${subjectName} Attempts</h2>
 
       ${subjectExams.length ? subjectExams.map(e => {
         const attempts = results.filter(r => r.examId === e.id);
@@ -1099,6 +1099,7 @@ async function adminViewStudentSubjectResults(studentId, studentName, subjectId,
               attempts.length ? attempts.map(r => `
                 <div class="attempt-box">
                   <h3>Attempt ${r.attemptNo || 1}</h3>
+
                   <p><b>Score:</b> ${r.score}/${r.totalMarks}</p>
                   <p><b>Percentage:</b> ${r.percentage || 0}%</p>
                   <p>
@@ -1107,6 +1108,10 @@ async function adminViewStudentSubjectResults(studentId, studentName, subjectId,
                     | <b>Not Attempted:</b> ${r.notAttempted || 0}
                   </p>
                   <p><b>Date:</b> ${r.date}</p>
+
+                  <button onclick="adminViewAttemptResponse('${studentId}', ${r.examId}, ${r.attemptNo || 1})">
+                    View Response
+                  </button>
                 </div>
               `).join("")
               : `<p>No attempt yet</p>`
@@ -1120,6 +1125,83 @@ async function adminViewStudentSubjectResults(studentId, studentName, subjectId,
       `}
     </div>
   `;
+}
+async function adminViewAttemptResponse(studentId, examId, attemptNo) {
+  const results = await fetch("/results/" + studentId).then(r => r.json());
+
+  const result = results.find(
+    r =>
+      r.examId === examId &&
+      Number(r.attemptNo || 1) === Number(attemptNo)
+  );
+
+  if (!result) {
+    alert("Attempt response not found");
+    return;
+  }
+
+  app.innerHTML = layout(`
+    <div class="course-header">
+      <span class="exam-tag">STUDENT RESPONSE</span>
+      <h1>${result.studentName}</h1>
+      <p>${result.examTitle} - Attempt ${result.attemptNo || 1}</p>
+    </div>
+
+    <div class="section premium-section">
+      <h2>Attempt Summary</h2>
+
+      <div class="grid">
+        <div class="stat-card">
+          <h3>Score</h3>
+          <p>${result.score}/${result.totalMarks}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Correct</h3>
+          <p>${result.correctCount || 0}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Wrong</h3>
+          <p>${result.wrongCount || 0}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Not Attempted</h3>
+          <p>${result.notAttempted || 0}</p>
+        </div>
+      </div>
+
+      <h2 style="margin-top:25px;">Question Wise Response</h2>
+
+      ${result.review && result.review.length ? result.review.map((q, i) => `
+        <div class="card response-card ${q.status === "Correct" ? "response-correct" : q.status === "Wrong" ? "response-wrong" : "response-not"}">
+          <h3>Q${i + 1}. ${q.question}</h3>
+
+          <p>
+            <b>Student Answer:</b>
+            <span class="${q.status === "Correct" ? "correct" : q.status === "Wrong" ? "wrong" : "gray"}">
+              ${q.yourAnswer}
+            </span>
+          </p>
+
+          <p>
+            <b>Correct Answer:</b>
+            <span class="correct">${q.correctAnswer}</span>
+          </p>
+
+          <p><b>Status:</b> ${q.status}</p>
+          <p><b>Marks:</b> ${q.marks}</p>
+        </div>
+      `).join("") : `
+        <div class="empty-state">
+          <h3>No Response Found</h3>
+        </div>
+      `}
+
+      <button onclick="showStudents()">Back to Students</button>
+    </div>
+  `);
 }
 
 async function addStudent() {

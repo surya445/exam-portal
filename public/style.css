@@ -530,3 +530,21 @@ button:hover {
   margin-top:0;
   color:#1d4ed8;
 }
+.response-card{
+  border-left:6px solid #94a3b8;
+}
+
+.response-correct{
+  border-left-color:#16a34a;
+  background:#f0fdf4;
+}
+
+.response-wrong{
+  border-left-color:#dc2626;
+  background:#fef2f2;
+}
+
+.response-not{
+  border-left-color:#64748b;
+  background:#f8fafc;
+}
