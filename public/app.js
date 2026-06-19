@@ -5,7 +5,7 @@ let reviewMarks = [];
 let timer;
 let currentQuestionIndex = 0;
 let examTimeLeft = 0;
-
+let examStartTime = 0;
 const app = document.getElementById("app");
 const SESSION_TIME = 72 * 60 * 60 * 1000;
 
@@ -13,8 +13,7 @@ checkSavedLogin();
 
 function saveLogin(userData) {
   localStorage.setItem("examUser", JSON.stringify({
-    user: userData,
-    loginTime: Date.now()
+    user: userData
   }));
 }
 
@@ -27,15 +26,8 @@ function checkSavedLogin() {
   }
 
   const data = JSON.parse(saved);
-  const expired = Date.now() - data.loginTime > SESSION_TIME;
-
-  if (expired) {
-    localStorage.removeItem("examUser");
-    showLogin();
-    return;
-  }
-
   user = data.user;
+
   if (user.role === "admin") showAdminDashboard();
   else showStudentDashboard();
 }
@@ -376,7 +368,7 @@ async function showExamAttemptResultsPage(examId) {
             &nbsp;|&nbsp;
             <b>Not Attempted:</b> ${r.notAttempted || 0}
           </p>
-          <p><b>Date:</b> ${r.date}</p>
+          <p><b>Time Taken:</b> ${formatTime(r.timeTaken || 0)}</p>
         </div>
       `).join("") : `
         <div class="empty-state">
@@ -408,7 +400,7 @@ async function showExamInstructions(id) {
           <p><b>Negative Marks:</b> -${currentExam.negativeMarks || 0}</p>
         </div>
 
-        <button onclick="startExam()">Start Fullscreen Exam</button>
+        <button onclick="startExam()">Start Exam</button>
         <button onclick="showJoinedSeries()">Back to Course</button>
       </div>
     </div>
@@ -420,7 +412,7 @@ function startExam() {
   reviewMarks = new Array(currentExam.questions.length).fill(false);
   currentQuestionIndex = 0;
     examTimeLeft = currentExam.time;
-
+    examStartTime = Date.now();
  
 
   renderExamScreen();
@@ -572,7 +564,7 @@ function confirmSubmit() {
 async function submitExam(autoSubmitted) {
   clearInterval(timer);
 
-  
+  const timeTaken = Math.floor((Date.now() - examStartTime) / 1000);
 
   const res = await fetch("/submit", {
     method: "POST",
@@ -580,7 +572,8 @@ async function submitExam(autoSubmitted) {
     body: JSON.stringify({
       studentId: user.id,
       examId: currentExam.id,
-      answers
+      answers,
+      timeTaken
     })
   });
 
@@ -589,15 +582,20 @@ async function submitExam(autoSubmitted) {
   app.innerHTML = layout(`
     <div class="section">
       <h2>${autoSubmitted ? "Time Over - Exam Auto Submitted" : "Exam Submitted Successfully"}</h2>
+
       <h3>Attempt ${result.attemptNo || 1}</h3>
 
       <h3>Your Score: ${result.score}/${result.totalMarks}</h3>
+
       <p><b>Percentage:</b> ${result.percentage}%</p>
       <p><b>Correct:</b> ${result.correctCount}</p>
       <p><b>Wrong:</b> ${result.wrongCount}</p>
       <p><b>Not Attempted:</b> ${result.notAttempted}</p>
 
+      <p><b>Time Taken:</b> ${formatTime(result.timeTaken || timeTaken)}</p>
+
       <h2>Answer Key</h2>
+
       ${result.review.map(r => `
         <div class="card">
           <b>${r.question}</b><br><br>
@@ -1107,7 +1105,7 @@ async function adminViewStudentSubjectResults(studentId, studentName, subjectId,
                     | <b>Wrong:</b> ${r.wrongCount || 0}
                     | <b>Not Attempted:</b> ${r.notAttempted || 0}
                   </p>
-                  <p><b>Date:</b> ${r.date}</p>
+                  <p><b>Time Taken:</b> ${formatTime(r.timeTaken || 0)}</p>
 
                   <button onclick="adminViewAttemptResponse('${studentId}', ${r.examId}, ${r.attemptNo || 1})">
                     View Response
@@ -1169,6 +1167,11 @@ async function adminViewAttemptResponse(studentId, examId, attemptNo) {
         <div class="stat-card">
           <h3>Not Attempted</h3>
           <p>${result.notAttempted || 0}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Time Taken</h3>
+          <p>${formatTime(result.timeTaken || 0)}</p>
         </div>
       </div>
 

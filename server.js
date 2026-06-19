@@ -235,7 +235,7 @@ app.get("/exams/subject/:subjectId", (req, res) => {
 });
 
 app.post("/submit", (req, res) => {
-  const { studentId, examId, answers } = req.body;
+  const { studentId, examId, answers, timeTaken } = req.body;
   const db = readDB();
   ensureArrays(db);
 
@@ -315,6 +315,7 @@ app.post("/submit", (req, res) => {
     notAttempted,
     marksPerQuestion,
     negativeMarks,
+    timeTaken: Number(timeTaken || 0),
     date: new Date().toLocaleString(),
     review
   };
