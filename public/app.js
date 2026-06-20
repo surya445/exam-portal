@@ -96,6 +96,7 @@ function layout(content) {
           ${
             user.role === "admin" ?
             `
+            <button onclick="showPublishedExamSeries()">Published Exams</button>
             <button onclick="showAdminDashboard()">Dashboard</button>
             <button onclick="showSeriesAdmin()">Series & Subjects</button>
             <button onclick="showCreateExam()">Create Exam</button>
@@ -677,23 +678,106 @@ async function showAdminDashboard() {
         <p>${results.length}</p>
       </div>
     </div>
+  `);
+}
+async function showPublishedExamSeries() {
+  const series = await fetch("/series").then(r => r.json());
 
-    <div class="section">
-      <h2>Published Exams</h2>
+  app.innerHTML = layout(`
+    <div class="course-header">
+      <span class="exam-tag">PUBLISHED EXAMS</span>
+      <h1>Exam Series</h1>
+      <p>Select a series to view subjects and published tests.</p>
+    </div>
 
-      ${exams.length ? exams.map(e => `
-        <div class="card">
-          <h3>${e.title}</h3>
-          <p>${e.questions.length} Questions • ${formatTime(e.time)}</p>
-          <p>Correct: +${e.marksPerQuestion || 1} | Wrong: -${e.negativeMarks || 0}</p>
-          <div style="display:flex; gap:10px; margin-top:10px;">
-          <button onclick="editExam(${e.id})">Edit Exam</button>
-          <button class="logout" onclick="deleteExam(${e.id})">Delete Exam</button>
+    <div class="section premium-section">
+      ${series.length ? series.map(s => `
+        <div class="exam-premium-card">
+          <div>
+            <span class="exam-tag">SERIES</span>
+            <h3>${s.name}</h3>
+            <p>${s.description || "Subject-wise exams"}</p>
+          </div>
+
+          <button onclick="showPublishedExamSubjects(${s.id}, '${safeText(s.name)}')">
+            Open Series
+          </button>
         </div>
+      `).join("") : `
+        <div class="empty-state">
+          <h3>No Series Found</h3>
+          <p>Add series first from Series & Subjects.</p>
         </div>
-      `).join("") : "<p>No exam published</p>"}
+      `}
     </div>
   `);
+}
+
+async function showPublishedExamSubjects(seriesId, seriesName) {
+  const subjects = await fetch("/subjects/" + seriesId).then(r => r.json());
+
+  app.innerHTML = layout(`
+    <div class="course-header">
+      <span class="exam-tag">${seriesName}</span>
+      <h1>Subjects</h1>
+      <p>Select a subject to view published exams.</p>
+    </div>
+
+    <div class="subject-list">
+      ${subjects.length ? subjects.map((sub, index) => `
+        <button class="subject-line" onclick="showPublishedSubjectExams(${sub.id}, '${safeText(sub.name)}')">
+          <span>${index + 1}</span>
+          <b>${sub.name}</b>
+          <small>View Published Tests</small>
+        </button>
+      `).join("") : `
+        <div class="empty-state">
+          <h3>No Subjects Found</h3>
+          <p>No subject added in this series.</p>
+        </div>
+      `}
+    </div>
+
+    <div id="publishedExamArea"></div>
+  `);
+}
+
+async function showPublishedSubjectExams(subjectId, subjectName) {
+  const exams = await fetch("/admin/exams").then(r => r.json());
+
+  const subjectExams = exams.filter(e => e.subjectId === subjectId);
+
+  document.getElementById("publishedExamArea").innerHTML = `
+    <div class="section premium-section">
+      <h2>${subjectName} - Published Tests</h2>
+
+      ${subjectExams.length ? subjectExams.map(e => `
+        <div class="exam-premium-card">
+          <div>
+            <span class="exam-tag">PUBLISHED TEST</span>
+            <h3>${e.title}</h3>
+            <p>${e.questions.length} Questions • ${formatTime(e.time)}</p>
+            <small>
+              Correct: +${e.marksPerQuestion || 1} |
+              Negative: -${e.negativeMarks || 0}
+            </small>
+            <br>
+            <small><b>Publish Time:</b> ${e.publishAt || "Instant Publish"}</small>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button onclick="editExam(${e.id})">Edit</button>
+            <button class="logout" onclick="deleteExam(${e.id})">Delete</button>
+          </div>
+        </div>
+      `).join("") : `
+        <div class="empty-state">
+          <h3>No Published Test</h3>
+          <p>No exam found in this subject.</p>
+        </div>
+      `}
+    </div>
+  `;
 }
 
 async function showSeriesAdmin() {
