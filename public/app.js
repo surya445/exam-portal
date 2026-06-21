@@ -946,7 +946,7 @@ function addQuestion() {
     <div class="card question-card">
       <h3>Question ${count}</h3>
 
-      <input class="question enter-next" placeholder="Enter Question">
+      <textarea class="question question-text" placeholder="Enter Question"></textarea>
       <input class="option1 enter-next" placeholder="Option A">
       <input class="option2 enter-next" placeholder="Option B">
       <input class="option3 enter-next" placeholder="Option C">
@@ -962,7 +962,7 @@ function addQuestion() {
   enableEnterNext();
 
   const allInputs = document.querySelectorAll(".enter-next");
-  allInputs[allInputs.length - 6].focus();
+  questionBox.lastElementChild.querySelector(".question").focus();
 }
 
 function enableEnterNext() {

@@ -548,3 +548,14 @@ button:hover {
   border-left-color:#64748b;
   background:#f8fafc;
 }
+textarea.question-text {
+  width: 100%;
+  min-height: 90px;
+  padding: 13px;
+  margin: 9px 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
