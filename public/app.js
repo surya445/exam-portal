@@ -1531,17 +1531,20 @@ async function editExam(id) {
       <div class="card edit-question-card">
         <h3>Question ${i + 1}</h3>
 
-        <input class="edit-question" value="${q.question}" placeholder="Question">
-        <input class="edit-option1" value="${q.options[0] || ""}" placeholder="Option A">
-        <input class="edit-option2" value="${q.options[1] || ""}" placeholder="Option B">
-        <input class="edit-option3" value="${q.options[2] || ""}" placeholder="Option C">
-        <input class="edit-option4" value="${q.options[3] || ""}" placeholder="Option D">
+        <textarea class="edit-question question-text" placeholder="Question">${q.question || ""}</textarea>
 
-        <input class="edit-answer" type="number" min="1" max="4" value="${Number(q.answer) + 1}" placeholder="Correct Option 1-4">
+        <input class="edit-option1 enter-next" value="${q.options[0] || ""}" placeholder="Option A">
+        <input class="edit-option2 enter-next" value="${q.options[1] || ""}" placeholder="Option B">
+        <input class="edit-option3 enter-next" value="${q.options[2] || ""}" placeholder="Option C">
+        <input class="edit-option4 enter-next" value="${q.options[3] || ""}" placeholder="Option D">
+
+        <input class="edit-answer enter-next" type="number" min="1" max="4" value="${Number(q.answer) + 1}" placeholder="Correct Option 1-4">
 
         <button class="logout" onclick="this.parentElement.remove()">Remove Question</button>
       </div>
     `).join("");
+
+  enableEnterNext();
 }
 
 async function loadEditSubjectOptions() {
@@ -1560,17 +1563,23 @@ function addEditQuestion() {
     <div class="card edit-question-card">
       <h3>Question ${count}</h3>
 
-      <input class="edit-question" placeholder="Question">
-      <input class="edit-option1" placeholder="Option A">
-      <input class="edit-option2" placeholder="Option B">
-      <input class="edit-option3" placeholder="Option C">
-      <input class="edit-option4" placeholder="Option D">
+      <textarea class="edit-question question-text" placeholder="Question"></textarea>
 
-      <input class="edit-answer" type="number" min="1" max="4" placeholder="Correct Option 1-4">
+      <input class="edit-option1 enter-next" placeholder="Option A">
+      <input class="edit-option2 enter-next" placeholder="Option B">
+      <input class="edit-option3 enter-next" placeholder="Option C">
+      <input class="edit-option4 enter-next" placeholder="Option D">
+
+      <input class="edit-answer enter-next" type="number" min="1" max="4" placeholder="Correct Option 1-4">
 
       <button class="logout" onclick="this.parentElement.remove()">Remove Question</button>
     </div>
   `);
+
+  enableEnterNext();
+
+  const cards = box.querySelectorAll(".edit-question-card");
+  cards[cards.length - 1].querySelector(".edit-question").focus();
 }
 
 async function updateExam(id) {
