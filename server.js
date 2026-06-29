@@ -65,12 +65,7 @@ app.post("/upload-image", upload.single("image"), (req, res) => {
 
   res.json({
     success: true,
-    imageUrl:
-  req.protocol +
-  "://" +
-  req.get("host") +
-  "/uploads/" +
-  req.file.filename
+    imageUrl: "/uploads/" + req.file.filename
   });
 });
 let dbCache = null;
