@@ -42,6 +42,37 @@ function formatTime(seconds) {
 function safeText(text) {
   return String(text).replace(/'/g, "\\'");
 }
+async function uploadImageFile(input) {
+  const file = input.files[0];
+  if (!file) return "";
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch("/upload-image", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    alert(data.message || "Image upload failed");
+    return "";
+  }
+
+  return data.imageUrl;
+}
+
+function imagePreview(url, cls = "preview-img") {
+  return url ? `<img src="${url}" class="${cls}">` : "";
+}
+function removeImage(button, inputClass) {
+  const card = button.closest(".card");
+  card.querySelector("." + inputClass).value = "";
+  button.previousElementSibling.innerHTML = "";
+  button.remove();
+}
 
 function showLogin() {
   app.innerHTML = `
@@ -474,7 +505,14 @@ function showQuestion() {
   document.getElementById("questionArea").innerHTML = `
     <div class="card question-card">
       <h3>Question ${currentQuestionIndex + 1} of ${currentExam.questions.length}</h3>
+
       <h2>${q.question}</h2>
+
+      ${
+        q.questionImage
+          ? `<img src="${q.questionImage}" class="question-image">`
+          : ""
+      }
 
       ${q.options.map((op, j) => `
         <label class="option-box">
@@ -484,7 +522,14 @@ function showQuestion() {
             ${answers[currentQuestionIndex] === j ? "checked" : ""}
             onclick="selectAnswer(${j})"
           >
-          ${String.fromCharCode(65 + j)}. ${op}
+
+          <span>${String.fromCharCode(65 + j)}. ${op}</span>
+
+          ${
+            q.optionImages && q.optionImages[j]
+              ? `<img src="${q.optionImages[j]}" class="option-image">`
+              : ""
+          }
         </label>
       `).join("")}
 
@@ -585,29 +630,34 @@ async function submitExam(autoSubmitted) {
       <h2>${autoSubmitted ? "Time Over - Exam Auto Submitted" : "Exam Submitted Successfully"}</h2>
 
       <h3>Attempt ${result.attemptNo || 1}</h3>
-
       <h3>Your Score: ${result.score}/${result.totalMarks}</h3>
 
       <p><b>Percentage:</b> ${result.percentage}%</p>
       <p><b>Correct:</b> ${result.correctCount}</p>
       <p><b>Wrong:</b> ${result.wrongCount}</p>
       <p><b>Not Attempted:</b> ${result.notAttempted}</p>
-
       <p><b>Time Taken:</b> ${formatTime(result.timeTaken || timeTaken)}</p>
 
       <h2>Answer Key</h2>
 
       ${result.review.map(r => `
         <div class="card">
-          <b>${r.question}</b><br><br>
+          <b>${r.question}</b><br>
 
+          ${r.questionImage ? `<img src="${r.questionImage}" class="question-image">` : ""}
+
+          <br>
           Your Answer:
-          <span class="${r.status === 'Correct' ? 'correct' : 'wrong'}">
+          <span class="${r.status === 'Correct' ? 'correct' : r.status === 'Wrong' ? 'wrong' : 'gray'}">
             ${r.yourAnswer}
           </span><br>
 
+          ${r.yourAnswerImage ? `<img src="${r.yourAnswerImage}" class="option-image">` : ""}
+
           Correct Answer:
           <span class="correct">${r.correctAnswer}</span><br>
+
+          ${r.correctAnswerImage ? `<img src="${r.correctAnswerImage}" class="option-image">` : ""}
 
           Status: ${r.status}<br>
           Marks: ${r.marks}
@@ -947,22 +997,50 @@ function addQuestion() {
       <h3>Question ${count}</h3>
 
       <textarea class="question question-text" placeholder="Enter Question"></textarea>
+
+      <label>Question Image</label>
+      <input class="question-image-file" type="file" accept="image/*">
+      <input class="question-image-url" type="hidden" value="">
+      <div class="image-preview"></div>
+
       <input class="option1 enter-next" placeholder="Option A">
+      <input class="option1-image-file" type="file" accept="image/*">
+      <input class="option1-image-url" type="hidden" value="">
+
       <input class="option2 enter-next" placeholder="Option B">
+      <input class="option2-image-file" type="file" accept="image/*">
+      <input class="option2-image-url" type="hidden" value="">
+
       <input class="option3 enter-next" placeholder="Option C">
+      <input class="option3-image-file" type="file" accept="image/*">
+      <input class="option3-image-url" type="hidden" value="">
+
       <input class="option4 enter-next" placeholder="Option D">
+      <input class="option4-image-file" type="file" accept="image/*">
+      <input class="option4-image-url" type="hidden" value="">
 
       <input class="answer enter-next" type="number" min="1" max="4" placeholder="Correct Option Number: 1, 2, 3, or 4">
-
-      <p><small>Jo option number correct doge, wahi correct hoga. Baaki options wrong honge.</small></p>
     </div>
   `;
 
   questionBox.insertAdjacentHTML("beforeend", html);
   enableEnterNext();
-
-  const allInputs = document.querySelectorAll(".enter-next");
   questionBox.lastElementChild.querySelector(".question").focus();
+  const card = questionBox.lastElementChild;
+
+card.querySelectorAll('input[type="file"]').forEach(input => {
+  input.addEventListener("change", async function () {
+    const url = await uploadImageFile(this);
+
+    if (!url) return;
+
+    const hidden = this.nextElementSibling;
+    hidden.value = url;
+
+    const preview = hidden.nextElementSibling;
+    preview.innerHTML = `<img src="${url}" class="preview-img">`;
+  });
+});
 }
 
 function enableEnterNext() {
@@ -1001,13 +1079,22 @@ async function publishExam() {
   const questionCards = document.querySelectorAll(".question-card");
   const questions = [];
 
-  questionCards.forEach(card => {
+  for (const card of questionCards) {
     const question = card.querySelector(".question").value;
     const option1 = card.querySelector(".option1").value;
     const option2 = card.querySelector(".option2").value;
     const option3 = card.querySelector(".option3").value;
     const option4 = card.querySelector(".option4").value;
     const answer = Number(card.querySelector(".answer").value) - 1;
+
+    const questionImage = card.querySelector(".question-image-url").value || "";
+
+const optionImages = [
+  card.querySelector(".option1-image-url").value || "",
+  card.querySelector(".option2-image-url").value || "",
+  card.querySelector(".option3-image-url").value || "",
+  card.querySelector(".option4-image-url").value || ""
+];
 
     if (
       question &&
@@ -1020,11 +1107,13 @@ async function publishExam() {
     ) {
       questions.push({
         question,
+        questionImage,
         options: [option1, option2, option3, option4],
+        optionImages,
         answer
       });
     }
-  });
+  }
 
   if (questions.length === 0) {
     alert("Kam se kam 1 valid question add karo");
@@ -1230,6 +1319,7 @@ async function adminViewAttemptResponse(studentId, examId, attemptNo) {
     </div>
 
     <div class="section premium-section">
+
       <h2>Attempt Summary</h2>
 
       <div class="grid">
@@ -1261,36 +1351,76 @@ async function adminViewAttemptResponse(studentId, examId, attemptNo) {
 
       <h2 style="margin-top:25px;">Question Wise Response</h2>
 
-      ${result.review && result.review.length ? result.review.map((q, i) => `
-        <div class="card response-card ${q.status === "Correct" ? "response-correct" : q.status === "Wrong" ? "response-wrong" : "response-not"}">
-          <h3>Q${i + 1}. ${q.question}</h3>
+      ${
+        result.review && result.review.length
+          ? result.review.map((q, i) => `
+          <div class="card response-card ${
+            q.status === "Correct"
+              ? "response-correct"
+              : q.status === "Wrong"
+              ? "response-wrong"
+              : "response-not"
+          }">
 
-          <p>
-            <b>Student Answer:</b>
-            <span class="${q.status === "Correct" ? "correct" : q.status === "Wrong" ? "wrong" : "gray"}">
-              ${q.yourAnswer}
-            </span>
-          </p>
+            <h3>Q${i + 1}. ${q.question}</h3>
 
-          <p>
-            <b>Correct Answer:</b>
-            <span class="correct">${q.correctAnswer}</span>
-          </p>
+            ${
+              q.questionImage
+                ? `<img src="${q.questionImage}" class="question-image">`
+                : ""
+            }
 
-          <p><b>Status:</b> ${q.status}</p>
-          <p><b>Marks:</b> ${q.marks}</p>
-        </div>
-      `).join("") : `
-        <div class="empty-state">
-          <h3>No Response Found</h3>
-        </div>
-      `}
+            <p>
+              <b>Student Answer:</b>
+              <span class="${
+                q.status === "Correct"
+                  ? "correct"
+                  : q.status === "Wrong"
+                  ? "wrong"
+                  : "gray"
+              }">
+                ${q.yourAnswer}
+              </span>
+            </p>
 
-      <button onclick="showStudents()">Back to Students</button>
+            ${
+              q.yourAnswerImage
+                ? `<img src="${q.yourAnswerImage}" class="option-image">`
+                : ""
+            }
+
+            <p>
+              <b>Correct Answer:</b>
+              <span class="correct">
+                ${q.correctAnswer}
+              </span>
+            </p>
+
+            ${
+              q.correctAnswerImage
+                ? `<img src="${q.correctAnswerImage}" class="option-image">`
+                : ""
+            }
+
+            <p><b>Status:</b> ${q.status}</p>
+            <p><b>Marks:</b> ${q.marks}</p>
+
+          </div>
+        `).join("")
+          : `
+            <div class="empty-state">
+              <h3>No Response Found</h3>
+            </div>
+          `
+      }
+
+      <button onclick="showStudents()">
+        Back to Students
+      </button>
+
     </div>
   `);
 }
-
 async function addStudent() {
   const id = document.getElementById("studentId").value;
   const password = document.getElementById("studentPassword").value;
@@ -1527,26 +1657,50 @@ async function editExam(id) {
   `);
 
   document.getElementById("editQuestionBox").innerHTML =
-    exam.questions.map((q, i) => `
-      <div class="card edit-question-card">
-        <h3>Question ${i + 1}</h3>
+    exam.questions.map((q, i) => {
+      const optionImages = q.optionImages || ["", "", "", ""];
 
-        <textarea class="edit-question question-text" placeholder="Question">${q.question || ""}</textarea>
+      return `
+        <div class="card edit-question-card">
+          <h3>Question ${i + 1}</h3>
 
-        <input class="edit-option1 enter-next" value="${q.options[0] || ""}" placeholder="Option A">
-        <input class="edit-option2 enter-next" value="${q.options[1] || ""}" placeholder="Option B">
-        <input class="edit-option3 enter-next" value="${q.options[2] || ""}" placeholder="Option C">
-        <input class="edit-option4 enter-next" value="${q.options[3] || ""}" placeholder="Option D">
+          <textarea class="edit-question question-text" placeholder="Question">${q.question || ""}</textarea>
 
-        <input class="edit-answer enter-next" type="number" min="1" max="4" value="${Number(q.answer) + 1}" placeholder="Correct Option 1-4">
+          <label>Question Image</label>
+          <input class="edit-question-image-file" type="file" accept="image/*">
+          <input class="edit-question-image-url" type="hidden" value="${q.questionImage || ""}">
+          <div class="image-preview">${q.questionImage ? `<img src="${q.questionImage}" class="preview-img">` : ""}</div>
+          ${q.questionImage ? `<button type="button" onclick="removeImage(this, 'edit-question-image-url')">Remove Question Image</button>` : ""}
 
-        <button class="logout" onclick="this.parentElement.remove()">Remove Question</button>
-      </div>
-    `).join("");
+          <input class="edit-option1 enter-next" value="${q.options[0] || ""}" placeholder="Option A">
+          <input class="edit-option1-image-file" type="file" accept="image/*">
+          <input class="edit-option1-image-url" type="hidden" value="${optionImages[0] || ""}">
+          <div class="image-preview">${optionImages[0] ? `<img src="${optionImages[0]}" class="preview-img">` : ""}</div>
+
+          <input class="edit-option2 enter-next" value="${q.options[1] || ""}" placeholder="Option B">
+          <input class="edit-option2-image-file" type="file" accept="image/*">
+          <input class="edit-option2-image-url" type="hidden" value="${optionImages[1] || ""}">
+          <div class="image-preview">${optionImages[1] ? `<img src="${optionImages[1]}" class="preview-img">` : ""}</div>
+
+          <input class="edit-option3 enter-next" value="${q.options[2] || ""}" placeholder="Option C">
+          <input class="edit-option3-image-file" type="file" accept="image/*">
+          <input class="edit-option3-image-url" type="hidden" value="${optionImages[2] || ""}">
+          <div class="image-preview">${optionImages[2] ? `<img src="${optionImages[2]}" class="preview-img">` : ""}</div>
+
+          <input class="edit-option4 enter-next" value="${q.options[3] || ""}" placeholder="Option D">
+          <input class="edit-option4-image-file" type="file" accept="image/*">
+          <input class="edit-option4-image-url" type="hidden" value="${optionImages[3] || ""}">
+          <div class="image-preview">${optionImages[3] ? `<img src="${optionImages[3]}" class="preview-img">` : ""}</div>
+
+          <input class="edit-answer enter-next" type="number" min="1" max="4" value="${Number(q.answer) + 1}" placeholder="Correct Option 1-4">
+
+          <button class="logout" onclick="this.parentElement.remove()">Remove Question</button>
+        </div>
+      `;
+    }).join("");
 
   enableEnterNext();
 }
-
 async function loadEditSubjectOptions() {
   const seriesId = document.getElementById("editSeries").value;
   const subjects = await fetch("/subjects/" + seriesId).then(r => r.json());
@@ -1565,34 +1719,106 @@ function addEditQuestion() {
 
       <textarea class="edit-question question-text" placeholder="Question"></textarea>
 
+      <label>Question Image</label>
+      <input class="edit-question-image-file" type="file" accept="image/*">
+      <input class="edit-question-image-url" type="hidden" value="">
+      <div class="image-preview"></div>
+
       <input class="edit-option1 enter-next" placeholder="Option A">
+      <input class="edit-option1-image-file" type="file" accept="image/*">
+      <input class="edit-option1-image-url" type="hidden" value="">
+      <div class="image-preview"></div>
+
       <input class="edit-option2 enter-next" placeholder="Option B">
+      <input class="edit-option2-image-file" type="file" accept="image/*">
+      <input class="edit-option2-image-url" type="hidden" value="">
+      <div class="image-preview"></div>
+
       <input class="edit-option3 enter-next" placeholder="Option C">
+      <input class="edit-option3-image-file" type="file" accept="image/*">
+      <input class="edit-option3-image-url" type="hidden" value="">
+      <div class="image-preview"></div>
+
       <input class="edit-option4 enter-next" placeholder="Option D">
+      <input class="edit-option4-image-file" type="file" accept="image/*">
+      <input class="edit-option4-image-url" type="hidden" value="">
+      <div class="image-preview"></div>
 
-      <input class="edit-answer enter-next" type="number" min="1" max="4" placeholder="Correct Option 1-4">
+      <input class="edit-answer enter-next"
+             type="number"
+             min="1"
+             max="4"
+             placeholder="Correct Option 1-4">
 
-      <button class="logout" onclick="this.parentElement.remove()">Remove Question</button>
+      <button class="logout" onclick="this.parentElement.remove()">
+        Remove Question
+      </button>
     </div>
   `);
 
   enableEnterNext();
 
-  const cards = box.querySelectorAll(".edit-question-card");
-  cards[cards.length - 1].querySelector(".edit-question").focus();
+  const card = box.lastElementChild;
+
+  card.querySelector(".edit-question").focus();
+
+  card.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener("change", async function () {
+
+      const url = await uploadImageFile(this);
+
+      if (!url) return;
+
+      const hidden = this.nextElementSibling;
+      hidden.value = url;
+
+      const preview = hidden.nextElementSibling;
+
+      preview.innerHTML = `
+        <img src="${url}" class="preview-img">
+      `;
+    });
+  });
 }
 
 async function updateExam(id) {
   const cards = document.querySelectorAll(".edit-question-card");
   const questions = [];
 
-  cards.forEach(card => {
+  for (const card of cards) {
     const question = card.querySelector(".edit-question").value;
     const option1 = card.querySelector(".edit-option1").value;
     const option2 = card.querySelector(".edit-option2").value;
     const option3 = card.querySelector(".edit-option3").value;
     const option4 = card.querySelector(".edit-option4").value;
     const answer = Number(card.querySelector(".edit-answer").value) - 1;
+
+    let questionImage = card.querySelector(".edit-question-image-url")?.value || "";
+
+    const qFile = card.querySelector(".edit-question-image-file");
+    if (qFile && qFile.files.length > 0) {
+      questionImage = await uploadImageFile(qFile);
+    }
+
+    let optionImages = [
+      card.querySelector(".edit-option1-image-url")?.value || "",
+      card.querySelector(".edit-option2-image-url")?.value || "",
+      card.querySelector(".edit-option3-image-url")?.value || "",
+      card.querySelector(".edit-option4-image-url")?.value || ""
+    ];
+
+    const imageFiles = [
+      card.querySelector(".edit-option1-image-file"),
+      card.querySelector(".edit-option2-image-file"),
+      card.querySelector(".edit-option3-image-file"),
+      card.querySelector(".edit-option4-image-file")
+    ];
+
+    for (let i = 0; i < imageFiles.length; i++) {
+      if (imageFiles[i] && imageFiles[i].files.length > 0) {
+        optionImages[i] = await uploadImageFile(imageFiles[i]);
+      }
+    }
 
     if (
       question &&
@@ -1605,11 +1831,13 @@ async function updateExam(id) {
     ) {
       questions.push({
         question,
+        questionImage,
         options: [option1, option2, option3, option4],
+        optionImages,
         answer
       });
     }
-  });
+  }
 
   if (questions.length === 0) {
     alert("Kam se kam 1 valid question hona chahiye");
@@ -1622,8 +1850,8 @@ async function updateExam(id) {
     title: document.getElementById("editTitle").value,
     time: Number(document.getElementById("editTime").value),
     publishAt: document.getElementById("editPublishAt").value
-  ? new Date(document.getElementById("editPublishAt").value).toISOString()
-  : "",
+      ? new Date(document.getElementById("editPublishAt").value).toISOString()
+      : "",
     marksPerQuestion: Number(document.getElementById("editMarks").value || 1),
     negativeMarks: Number(document.getElementById("editNegative").value || 0),
     instructions: document.getElementById("editInstructions").value,

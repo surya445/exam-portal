@@ -65,7 +65,12 @@ app.post("/upload-image", upload.single("image"), (req, res) => {
 
   res.json({
     success: true,
-    imageUrl: "/uploads/" + req.file.filename
+    imageUrl:
+  req.protocol +
+  "://" +
+  req.get("host") +
+  "/uploads/" +
+  req.file.filename
   });
 });
 let dbCache = null;
@@ -317,7 +322,7 @@ app.post("/submit", (req, res) => {
   yourAnswer: "Not Attempted",
   yourAnswerImage: "",
 
-  correctAnswer: q.options[q.answer],
+  correctAnswer: q.options[q.answer] || "",
   correctAnswerImage: q.optionImages ? q.optionImages[q.answer] : "",
 
   status: "Not Attempted",
@@ -341,10 +346,10 @@ app.post("/submit", (req, res) => {
   question: q.question,
   questionImage: q.questionImage || "",
 
-  yourAnswer: q.options[userAnswer],
+  yourAnswer: q.options[userAnswer] || "",
   yourAnswerImage: q.optionImages ? q.optionImages[userAnswer] : "",
 
-  correctAnswer: q.options[q.answer],
+  correctAnswer: q.options[q.answer] || "",
   correctAnswerImage: q.optionImages ? q.optionImages[q.answer] : "",
 
   status: correct ? "Correct" : "Wrong",
