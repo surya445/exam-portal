@@ -1087,14 +1087,20 @@ async function publishExam() {
     const option4 = card.querySelector(".option4").value;
     const answer = Number(card.querySelector(".answer").value) - 1;
 
-    const questionImage = card.querySelector(".question-image-url").value || "";
+    let questionImage = card.querySelector(".question-image-url")?.value || "";
+    if (!questionImage) {
+      questionImage = await uploadImageFile(card.querySelector(".question-image-file"));
+    }
 
-const optionImages = [
-  card.querySelector(".option1-image-url").value || "",
-  card.querySelector(".option2-image-url").value || "",
-  card.querySelector(".option3-image-url").value || "",
-  card.querySelector(".option4-image-url").value || ""
-];
+    const optionImages = [];
+
+    for (let i = 1; i <= 4; i++) {
+      let img = card.querySelector(`.option${i}-image-url`)?.value || "";
+      if (!img) {
+        img = await uploadImageFile(card.querySelector(`.option${i}-image-file`));
+      }
+      optionImages.push(img);
+    }
 
     if (
       question &&
