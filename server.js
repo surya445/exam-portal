@@ -5,20 +5,69 @@ const fs = require("fs");
 const cors = require("cors");
 const path = require("path");
 const { MongoClient } = require("mongodb");
+const multer = require("multer");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
-
+app.use("/uploads", express.static("uploads"));
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+
 const DB_FILE = "database.json";
 const MONGO_URI = process.env.MONGO_URI;
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = "uploads";
 
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
+
+    cb(null, dir);
+  },
+
+  filename: function (req, file, cb) {
+    const uniqueName =
+      Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname);
+
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 2 * 1024 * 1024
+  },
+  fileFilter: function (req, file, cb) {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files allowed"));
+    }
+
+    cb(null, true);
+  }
+});
+app.post("/upload-image", upload.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.json({
+      success: false,
+      message: "Image upload failed"
+    });
+  }
+
+  res.json({
+    success: true,
+    imageUrl: "/uploads/" + req.file.filename
+  });
+});
 let dbCache = null;
 let portalCollection = null;
 
@@ -262,12 +311,18 @@ app.post("/submit", (req, res) => {
       notAttempted++;
 
       review.push({
-        question: q.question,
-        yourAnswer: "Not Attempted",
-        correctAnswer: q.options[q.answer],
-        status: "Not Attempted",
-        marks: 0
-      });
+  question: q.question,
+  questionImage: q.questionImage || "",
+
+  yourAnswer: "Not Attempted",
+  yourAnswerImage: "",
+
+  correctAnswer: q.options[q.answer],
+  correctAnswerImage: q.optionImages ? q.optionImages[q.answer] : "",
+
+  status: "Not Attempted",
+  marks: 0
+});
 
       return;
     }
@@ -283,12 +338,18 @@ app.post("/submit", (req, res) => {
     }
 
     review.push({
-      question: q.question,
-      yourAnswer: q.options[userAnswer],
-      correctAnswer: q.options[q.answer],
-      status: correct ? "Correct" : "Wrong",
-      marks: correct ? marksPerQuestion : -negativeMarks
-    });
+  question: q.question,
+  questionImage: q.questionImage || "",
+
+  yourAnswer: q.options[userAnswer],
+  yourAnswerImage: q.optionImages ? q.optionImages[userAnswer] : "",
+
+  correctAnswer: q.options[q.answer],
+  correctAnswerImage: q.optionImages ? q.optionImages[q.answer] : "",
+
+  status: correct ? "Correct" : "Wrong",
+  marks: correct ? marksPerQuestion : -negativeMarks
+});
   });
 
   const totalMarks = exam.questions.length * marksPerQuestion;
@@ -567,7 +628,13 @@ app.post("/admin/add-exam", (req, res) => {
       message: "Exam details incomplete hain"
     });
   }
-
+  const normalizedQuestions = questions.map(q => ({
+  question: q.question || "",
+  questionImage: q.questionImage || "",
+  options: q.options || ["", "", "", ""],
+  optionImages: q.optionImages || ["", "", "", ""],
+  answer: Number(q.answer)
+}));
   const newExam = {
     id: Date.now(),
     seriesId: Number(seriesId),
@@ -581,7 +648,7 @@ app.post("/admin/add-exam", (req, res) => {
       instructions || "Please read all questions carefully before submitting.",
     submitWarning:
       submitWarning || "Are you sure you want to submit this exam?",
-    questions
+    questions: normalizedQuestions
   };
 
   db.exams.push(newExam);
@@ -613,6 +680,16 @@ app.put("/admin/update-exam/:id", (req, res) => {
       success: false,
       message: "Exam not found"
     });
+  }
+
+  if (req.body.questions) {
+    req.body.questions = req.body.questions.map(q => ({
+      question: q.question || "",
+      questionImage: q.questionImage || "",
+      options: q.options || ["", "", "", ""],
+      optionImages: q.optionImages || ["", "", "", ""],
+      answer: Number(q.answer)
+    }));
   }
 
   db.exams[index] = {
