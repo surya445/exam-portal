@@ -61,11 +61,31 @@ async function uploadImageFile(input) {
     return "";
   }
 
-  return data.imageUrl;
+  try {
+    return new URL(data.imageUrl).pathname;
+  } catch {
+    return data.imageUrl;
+  }
 }
 
 function imagePreview(url, cls = "preview-img") {
   return url ? `<img src="${url}" class="${cls}">` : "";
+}
+
+function imageSrc(url) {
+  if (!url) return "";
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url;
+  }
+}
+
+function removeImage(button, inputClass) {
+  const card = button.closest(".card");
+  card.querySelector("." + inputClass).value = "";
+  button.previousElementSibling.innerHTML = "";
+  button.remove();
 }
 function removeImage(button, inputClass) {
   const card = button.closest(".card");
@@ -510,7 +530,7 @@ function showQuestion() {
 
       ${
         q.questionImage
-          ? `<img src="${q.questionImage}" class="question-image">`
+          ? `<img src="${imageSrc(q.questionImage)}" class="question-image">`
           : ""
       }
 
@@ -527,7 +547,7 @@ function showQuestion() {
 
           ${
             q.optionImages && q.optionImages[j]
-              ? `<img src="${q.optionImages[j]}" class="option-image">`
+              ? `<img src="${imageSrc(q.optionImages[j])}" class="option-image">`
               : ""
           }
         </label>
@@ -1372,7 +1392,7 @@ async function adminViewAttemptResponse(studentId, examId, attemptNo) {
 
             ${
               q.questionImage
-                ? `<img src="${q.questionImage}" class="question-image">`
+                ? `<img src="${imageSrc(q.questionImage)}" class="question-image">`
                 : ""
             }
 
