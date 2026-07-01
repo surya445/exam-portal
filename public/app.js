@@ -406,30 +406,171 @@ async function showExamAttemptResultsPage(examId) {
     </div>
 
     <div class="section premium-section">
+
       <h2>Attempt History</h2>
 
-      ${examResults.length ? examResults.map(r => `
-        <div class="attempt-box">
-          <h3>Attempt ${r.attemptNo || 1}</h3>
-          <p><b>Score:</b> ${r.score}/${r.totalMarks}</p>
-          <p><b>Percentage:</b> ${r.percentage || 0}%</p>
-          <p>
-            <b>Correct:</b> ${r.correctCount || 0}
-            &nbsp;|&nbsp;
-            <b>Wrong:</b> ${r.wrongCount || 0}
-            &nbsp;|&nbsp;
-            <b>Not Attempted:</b> ${r.notAttempted || 0}
-          </p>
-          <p><b>Time Taken:</b> ${formatTime(r.timeTaken || 0)}</p>
-        </div>
-      `).join("") : `
-        <div class="empty-state">
-          <h3>No Result Found</h3>
-          <p>You have not attempted this exam yet.</p>
-        </div>
-      `}
+      ${
+        examResults.length
+          ? examResults.map(r => `
+            <div class="attempt-box">
 
-      <button onclick="showJoinedSeries()">Back to Course</button>
+              <h3>Attempt ${r.attemptNo || 1}</h3>
+
+              <p><b>Score:</b> ${r.score}/${r.totalMarks}</p>
+
+              <p><b>Percentage:</b> ${r.percentage || 0}%</p>
+
+              <p>
+                <b>Correct:</b> ${r.correctCount || 0}
+                &nbsp; | &nbsp;
+                <b>Wrong:</b> ${r.wrongCount || 0}
+                &nbsp; | &nbsp;
+                <b>Not Attempted:</b> ${r.notAttempted || 0}
+              </p>
+
+              <p>
+                <b>Time Taken:</b>
+                ${formatTime(r.timeTaken || 0)}
+              </p>
+
+              <button
+                onclick="studentViewAttemptResponse(${r.examId}, ${r.attemptNo || 1})">
+                View Response
+              </button>
+
+            </div>
+          `).join("")
+          : `
+            <div class="empty-state">
+              <h3>No Result Found</h3>
+              <p>You have not attempted this exam yet.</p>
+            </div>
+          `
+      }
+
+      <button onclick="showJoinedSeries()">
+        Back to Course
+      </button>
+
+    </div>
+  `);
+}
+
+async function studentViewAttemptResponse(examId, attemptNo) {
+  const results = await fetch("/results/" + user.id).then(r => r.json());
+
+  const result = results.find(
+    r =>
+      r.examId === examId &&
+      Number(r.attemptNo || 1) === Number(attemptNo)
+  );
+
+  if (!result) {
+    alert("Attempt response not found");
+    return;
+  }
+
+  app.innerHTML = layout(`
+    <div class="course-header">
+      <span class="exam-tag">MY RESPONSE</span>
+      <h1>${result.examTitle}</h1>
+      <p>Attempt ${result.attemptNo || 1}</p>
+    </div>
+
+    <div class="section premium-section">
+      <h2>Attempt Summary</h2>
+
+      <div class="grid">
+        <div class="stat-card">
+          <h3>Score</h3>
+          <p>${result.score}/${result.totalMarks}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Correct</h3>
+          <p>${result.correctCount || 0}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Wrong</h3>
+          <p>${result.wrongCount || 0}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Not Attempted</h3>
+          <p>${result.notAttempted || 0}</p>
+        </div>
+
+        <div class="stat-card">
+          <h3>Time Taken</h3>
+          <p>${formatTime(result.timeTaken || 0)}</p>
+        </div>
+      </div>
+
+      <h2 style="margin-top:25px;">Question Wise Response</h2>
+
+      ${
+        result.review && result.review.length
+          ? result.review.map((q, i) => `
+            <div class="card response-card ${
+              q.status === "Correct"
+                ? "response-correct"
+                : q.status === "Wrong"
+                ? "response-wrong"
+                : "response-not"
+            }">
+              <h3>Q${i + 1}. ${q.question}</h3>
+
+              ${
+                q.questionImage
+                  ? `<img src="${imageSrc(q.questionImage)}" class="question-image">`
+                  : ""
+              }
+
+              <p>
+                <b>Your Answer:</b>
+                <span class="${
+                  q.status === "Correct"
+                    ? "correct"
+                    : q.status === "Wrong"
+                    ? "wrong"
+                    : "gray"
+                }">
+                  ${q.yourAnswer}
+                </span>
+              </p>
+
+              ${
+                q.yourAnswerImage
+                  ? `<img src="${imageSrc(q.yourAnswerImage)}" class="option-image">`
+                  : ""
+              }
+
+              <p>
+                <b>Correct Answer:</b>
+                <span class="correct">${q.correctAnswer}</span>
+              </p>
+
+              ${
+                q.correctAnswerImage
+                  ? `<img src="${imageSrc(q.correctAnswerImage)}" class="option-image">`
+                  : ""
+              }
+
+              <p><b>Status:</b> ${q.status}</p>
+              <p><b>Marks:</b> ${q.marks}</p>
+            </div>
+          `).join("")
+          : `
+            <div class="empty-state">
+              <h3>No Response Found</h3>
+            </div>
+          `
+      }
+
+      <button onclick="showExamAttemptResultsPage(${examId})">
+        Back to Attempts
+      </button>
     </div>
   `);
 }
